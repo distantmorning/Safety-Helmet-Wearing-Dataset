@@ -21,8 +21,8 @@ def parse_args():
                         'larger size for dense object and big size input')
     parser.add_argument('--threshold', type=float, default=0.4,
                         help='confidence threshold for object detection')
-
-    parser.add_argument('--gpu', action='store_false',
+    #修改1
+    parser.add_argument('--cpu', action='store_false',
                         help='use gpu or cpu.')
     
     args = parser.parse_args()
@@ -31,10 +31,10 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.gpu:
-        ctx = mx.gpu()
-    else:
+    if args.cpu:
         ctx = mx.cpu()
+    else:
+        ctx = mx.gpu()
         
     net = model_zoo.get_model(args.network, pretrained=False)
     

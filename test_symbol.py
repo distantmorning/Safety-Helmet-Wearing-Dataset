@@ -9,22 +9,110 @@ from mxnet import gluon
 
 import mxnet as mx
 import cv2
+from imutils.object_detection import non_max_suppression
+from imutils import paths
+from imutils.video import FileVideoStream
+import numpy as np
+import os, imutils
+#gd.flv
+hog = cv2.HOGDescriptor()
+hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 classes = ['hat', 'person']
-ctx = mx.gpu()
+ctx = mx.cpu()
+#
+#
+# frame = '1.jpg'
+# img = cv2.imread(frame)
+
+# x, img = data.transforms.presets.yolo.load_test(frame, short=416)
+# x = x.as_in_context(ctx)
+# net=gluon.SymbolBlock.imports(symbol_file='./darknet53-symbol.json', input_names=['data'], param_file='./darknet53-0000.params', ctx=ctx)
+#
+#
+#
+# box_ids, scores, bboxes = net(x)
+# ax = utils.viz.cv_plot_bbox(img, bboxes[0], scores[0], box_ids[0], class_names=classes,thresh=0.4)
+# cv2.imshow('image', img[...,::-1])
+# cv2.waitKey(0)
+# cv2.imwrite(frame.split('.')[0] + '_result.jpg', img[...,::-1])
+# cv2.destroyAllWindows()
 
 
-frame = '1.jpg'
-img = cv2.imread(frame)
-x, img = data.transforms.presets.yolo.load_test(frame, short=416)
-x = x.as_in_context(ctx)
-net=gluon.SymbolBlock.imports(symbol_file='./darknet53-symbol.json', input_names=['data'], param_file='./darknet53-0000.params', ctx=ctx)
+# cap = cv2.VideoCapture("rtmp://58.200.131.2:1935/livetv/hunantv")
+
+# cap = FileVideoStream(r'E:\yr.flv').start()
+# ret,frame = cap.read()
+# frame_index = 0
+# while ret:
+#     ret,frame = cap.read()
+#     newpath = os.path.join(r'image/capture/', str(frame_index) + ".jpg");
+#     cv2.imwrite( newpath,frame)
+#     img = newpath
+#     frame_index +=1
+#     # frame = imutils.resize(frame, width=min(800, frame.shape[1]))
+#     x, frame = data.transforms.presets.yolo.load_test(img, short=416)
+#     x = x.as_in_context(ctx)
+#     net=gluon.SymbolBlock.imports(symbol_file='./darknet53-symbol.json', input_names=['data'], param_file='./darknet53-0000.params', ctx=ctx)
+#     box_ids, scores, bboxes = net(x)
+#     ax = utils.viz.cv_plot_bbox(frame, bboxes[0], scores[0], box_ids[0], class_names=classes,thresh=0.4)
+#
+#     cv2.imshow("frame",frame)
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+# cv2.destroyAllWindows()
 
 
 
-box_ids, scores, bboxes = net(x)
-ax = utils.viz.cv_plot_bbox(img, bboxes[0], scores[0], box_ids[0], class_names=classes,thresh=0.4)
-cv2.imshow('image', img[...,::-1])
-cv2.waitKey(0)
-cv2.imwrite(frame.split('.')[0] + '_result.jpg', img[...,::-1])
-cv2.destroyAllWindows()
+cap = FileVideoStream(r'E:\yr.flv').start()
+hog = cv2.HOGDescriptor()
+hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+frame_index = 0
+while True:
+    frame = cap.read()
+    frame = imutils.resize(frame, width=min(800, frame.shape[1]))
+    if frame_index%12==0:
+        newpath = os.path.join(r'image/capture/', str(frame_index) + ".jpg");
+        cv2.imwrite( newpath,frame)
+        img = newpath
+        x, frame = data.transforms.presets.yolo.load_test(img, short=416)
+        x = x.as_in_context(ctx)
+        net=gluon.SymbolBlock.imports(symbol_file='./darknet53-symbol.json', input_names=['data'], param_file='./darknet53-0000.params', ctx=ctx)
 
+        box_ids, scores, bboxes = net(x)
+
+        if isinstance(bboxes, mx.nd.NDArray):
+            bboxes = bboxes.asnumpy()
+
+        if isinstance(box_ids, mx.nd.NDArray):
+            box_ids = box_ids.asnumpy()
+
+        if isinstance(scores, mx.nd.NDArray):
+            scores = scores.asnumpy()
+
+        length = scores[0]
+        #获得1帧内预测个数
+        num = 0;
+        for i in range(0,len(length)):
+            if scores[0][i] != -1:
+                num +=1
+            else:
+                break
+        for j in range(0,num):
+            print(box_ids[0][j])
+            print(scores[0][j])
+            print(bboxes[0][j])
+
+
+        ax = utils.viz.cv_plot_bbox(frame, bboxes[0], scores[0], box_ids[0], class_names=classes,thresh=0.4)
+
+
+        flag = 1
+        if flag == 0:
+            os.remove(newpath)
+        else:
+            cv2.imwrite(newpath, frame)
+
+        cv2.imshow("frame", frame)
+    frame_index += 1
+    if cv2.waitKey(1) == 27:
+        break
