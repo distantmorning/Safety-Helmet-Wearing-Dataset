@@ -38,7 +38,9 @@ ctx = mx.cpu()
 # cv2.destroyAllWindows()
 
 
-cap = cv2.VideoCapture("rtmp://58.200.131.2:1935/livetv/hunantv")
+# cap = cv2.VideoCapture("rtmp://58.200.131.2:1935/livetv/hunantv")
+cap = cv2.VideoCapture("rtmp://58.200.131.2:1935/livetv/cctv7")
+
 ret,frame = cap.read()
 frame_index = 0
 while ret:
